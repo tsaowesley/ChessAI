@@ -28,7 +28,7 @@ int getValue(int type) {
     return valueMap[type];
 }
 
-int State::calculateValue(int board[BOARD_H][BOARD_W], bool isPlayer) {
+int State::calculateValue(char board[BOARD_H][BOARD_W], bool isPlayer) {
     int totalValue = 0;
     int piece;
     for(int i=0; i<BOARD_H; i+=1){
@@ -48,6 +48,7 @@ int State::evaluate() {
     auto opponent_board = this->board.board[1 - this->player];
     int my_value = calculateValue(self_board, true);
     int opponent_value = calculateValue(opponent_board, false);
+
 
     return my_value - opponent_value;
 }
