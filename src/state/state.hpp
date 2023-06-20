@@ -54,6 +54,7 @@ class State {
     State(Board board, int player) : board(board), player(player){};
 
     int evaluate();
+    int calculateValue(char board[BOARD_H][BOARD_W], bool isPlayer);
     State* next_state(Move move);
     void get_legal_actions();
     std::string encode_output();
