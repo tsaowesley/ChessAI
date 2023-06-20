@@ -1,32 +1,44 @@
 #include <iostream>
 #include <sstream>
 #include <cstdint>
+#include <limits>
+#include <cmath>
 
 #include "./state.hpp"
 #include "../config.hpp"
 
+#define DEPTH 3
 
 /**
  * @brief evaluate the state
- * 
- * @return int 
+ *
+ * @return int
  */
-int State::evaluate(){
-  // [TODO] design your own evaluation function
-  return 0;
+int State::evaluate() {
+int pieceScores[7] = {0, 1, 5, 3, 3, 9, 50};
+int totalScore = 0;
+for (int row = 0; row < BOARD_H; row++) {
+    for (int col = 0; col < BOARD_W; col++) {
+        totalScore += pieceScores[board.board[this->player][row][col]];      // Player's pieces
+        totalScore -= pieceScores[board.board[1 - this->player][row][col]];  // Opponent's pieces
+    }
+}
+
+return totalScore;
+
 }
 
 
 /**
  * @brief return next state after the move
- * 
- * @param move 
- * @return State* 
+ *
+ * @param move
+ * @return State*
  */
 State* State::next_state(Move move){
   Board next = this->board;
   Point from = move.first, to = move.second;
-  
+
   int8_t moved = next.board[this->player][from.first][from.second];
   //promotion for pawn
   if(moved == 1 && (to.first==BOARD_H-1 || to.first==0)){
@@ -35,12 +47,12 @@ State* State::next_state(Move move){
   if(next.board[1-this->player][to.first][to.second]){
     next.board[1-this->player][to.first][to.second] = 0;
   }
-  
+
   next.board[this->player][from.first][from.second] = 0;
   next.board[this->player][to.first][to.second] = moved;
-  
+
   State* next_state = new State(next, 1-this->player);
-  
+
   if(this->game_state != WIN)
     next_state->get_legal_actions();
   return next_state;
@@ -58,20 +70,18 @@ static const int move_table_rook_bishop[8][7][2] = {
   {{-1, -1}, {-2, -2}, {-3, -3}, {-4, -4}, {-5, -5}, {-6, -6}, {-7, -7}},
 };
 static const int move_table_knight[8][2] = {
-  {1, 2}, {1, -2},
-  {-1, 2}, {-1, -2},
-  {2, 1}, {2, -1},
-  {-2, 1}, {-2, -1},
+  {1, 2}, {1, -2}, {-1, 2}, {-1, -2},
+  {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
 };
 static const int move_table_king[8][2] = {
-  {1, 0}, {0, 1}, {-1, 0}, {0, -1}, 
+  {1, 0}, {0, 1}, {-1, 0}, {0, -1},
   {1, 1}, {1, -1}, {-1, 1}, {-1, -1},
 };
 
 
 /**
  * @brief get all legal actions of now state
- * 
+ *
  */
 void State::get_legal_actions(){
   // [Optional]
@@ -81,7 +91,7 @@ void State::get_legal_actions(){
   std::vector<Move> all_actions;
   auto self_board = this->board.board[this->player];
   auto oppn_board = this->board.board[1 - this->player];
-  
+
   int now_piece, oppn_piece;
   for(int i=0; i<BOARD_H; i+=1){
     for(int j=0; j<BOARD_W; j+=1){
@@ -131,7 +141,7 @@ void State::get_legal_actions(){
               }
             }
             break;
-          
+
           case 2: //rook
           case 4: //bishop
           case 5: //queen
@@ -146,13 +156,13 @@ void State::get_legal_actions(){
               auto move_list = move_table_rook_bishop[part];
               for(int k=0; k<std::max(BOARD_H, BOARD_W); k+=1){
                 int p[2] = {move_list[k][0] + i, move_list[k][1] + j};
-                
+
                 if(p[0]>=BOARD_H || p[0]<0 || p[1]>=BOARD_W || p[1]<0) break;
                 now_piece = self_board[p[0]][p[1]];
                 if(now_piece) break;
-                
+
                 all_actions.push_back(Move(Point(i, j), Point(p[0], p[1])));
-                
+
                 oppn_piece = oppn_board[p[0]][p[1]];
                 if(oppn_piece){
                   if(oppn_piece==6){
@@ -165,17 +175,17 @@ void State::get_legal_actions(){
               }
             }
             break;
-          
+
           case 3: //knight
             for(auto move: move_table_knight){
               int x = move[0] + i;
               int y = move[1] + j;
-              
+
               if(x>=BOARD_H || x<0 || y>=BOARD_W || y<0) continue;
               now_piece = self_board[x][y];
               if(now_piece) continue;
               all_actions.push_back(Move(Point(i, j), Point(x, y)));
-              
+
               oppn_piece = oppn_board[x][y];
               if(oppn_piece==6){
                 this->game_state = WIN;
@@ -184,17 +194,17 @@ void State::get_legal_actions(){
               }
             }
             break;
-          
+
           case 6: //king
             for(auto move: move_table_king){
               int p[2] = {move[0] + i, move[1] + j};
-              
+
               if(p[0]>=BOARD_H || p[0]<0 || p[1]>=BOARD_W || p[1]<0) continue;
               now_piece = self_board[p[0]][p[1]];
               if(now_piece) continue;
-              
+
               all_actions.push_back(Move(Point(i, j), Point(p[0], p[1])));
-              
+
               oppn_piece = oppn_board[p[0]][p[1]];
               if(oppn_piece==6){
                 this->game_state = WIN;
@@ -218,8 +228,8 @@ const char piece_table[2][7][5] = {
 };
 /**
  * @brief encode the output for command line output
- * 
- * @return std::string 
+ *
+ * @return std::string
  */
 std::string State::encode_output(){
   std::stringstream ss;
@@ -243,8 +253,8 @@ std::string State::encode_output(){
 
 /**
  * @brief encode the state to the format for player
- * 
- * @return std::string 
+ *
+ * @return std::string
  */
 std::string State::encode_state(){
   std::stringstream ss;
@@ -262,3 +272,125 @@ std::string State::encode_state(){
   }
   return ss.str();
 }
+
+
+
+// std::vector<std::vector<double>> reverseArray(std::vector<std::vector<double>> array) {
+//     std::reverse(array.begin(), array.end());
+//     return array;
+// }
+
+// std::vector<std::vector<double>> pawnEvalWhite = {
+//     {0.0,  0.0,  0.0,  0.0,  0.0},
+//     {5.0,  5.0,  5.0,  5.0,  5.0},
+//     {1.0,  1.0,  2.0,  3.0,  3.0},
+//     {0.5,  0.5,  1.0,  2.5,  2.5},
+//     {0.0,  0.0,  0.0,  2.0,  2.0}
+// };
+
+// std::vector<std::vector<double>> pawnEvalBlack = reverseArray(pawnEvalWhite);
+
+// std::vector<std::vector<double>> knightEval = {
+//     {-5.0, -4.0, -3.0, -3.0, -3.0},
+//     {-4.0, -2.0,  0.0,  0.0,  0.0},
+//     {-3.0,  0.0,  1.0,  1.5,  1.5},
+//     {-3.0,  0.5,  1.5,  2.0,  2.0},
+//     {-3.0,  0.0,  1.5,  2.0,  2.0}
+// };
+
+// std::vector<std::vector<double>> bishopEvalWhite = {
+//     {-2.0, -1.0, -1.0, -1.0, -2.0},
+//     {-1.0,  0.0,  0.5,  1.0, -1.0},
+//     {-1.0,  0.5,  1.0,  0.5, -1.0},
+//     {-1.0,  0.0,  1.0,  1.0, -1.0},
+//     {-2.0, -1.0, -1.0, -1.0, -2.0}
+// };
+
+// std::vector<std::vector<double>> bishopEvalBlack = reverseArray(bishopEvalWhite);
+
+// std::vector<std::vector<double>> rookEvalWhite = {
+//     {0.0,  0.0,  0.0,  0.0,  0.0},
+//     {0.5,  1.0,  1.0,  1.0,  0.5},
+//     {-0.5,  0.0,  0.0,  0.0, -0.5},
+//     {-0.5,  0.0,  0.0,  0.0, -0.5},
+//     {0.0,  0.0,  0.0,  0.0,  0.0}
+// };
+
+// std::vector<std::vector<double>> rookEvalBlack = reverseArray(rookEvalWhite);
+
+// std::vector<std::vector<double>> evalQueen = {
+//     {-2.0, -1.0, -1.0, -0.5, -2.0},
+//     {-1.0,  0.0,  0.5,  0.0, -1.0},
+//     {-1.0,  0.5,  0.5,  0.5, -1.0},
+//     {-0.5,  0.0,  0.5,  0.5, -0.5},
+//     {-2.0, -1.0, -1.0, -0.5, -2.0}
+// };
+
+// std::vector<std::vector<double>> kingEvalWhite = {
+//     {-3.0, -4.0, -4.0, -5.0, -3.0},
+//     {-3.0, -4.0, -4.0, -5.0, -3.0},
+//     {-3.0, -4.0, -4.0, -5.0, -3.0},
+//     {-3.0, -4.0, -4.0, -5.0, -3.0},
+//     {-2.0, -3.0, -3.0, -4.0, -2.0}
+// };
+// std::vector<std::vector<double>> kingEvalBlack = reverseArray(kingEvalWhite);
+
+// int State::evaluate() {
+//     int pieceScores[7] = {0, 1, 5, 3, 3, 9, 50};
+//     double totalScore = 0.0;
+//     for (int row = 0; row < BOARD_H; row++) {
+//         for (int col = 0; col < BOARD_W; col++) {
+//             int playerPiece = board.board[this->player][row][col];
+//             int opponentPiece = board.board[1 - this->player][row][col];
+//             totalScore += pieceScores[playerPiece];
+//             totalScore -= pieceScores[opponentPiece];
+
+//             // Add the position evaluations
+//             if (playerPiece != 0) {  // Player's pieces
+//                 switch (playerPiece) {
+//                     case 1:  // Pawn
+//                         totalScore += pawnEvalWhite[row][col];
+//                         break;
+//                     case 2:  // Knight
+//                         totalScore += knightEval[row][col];
+//                         break;
+//                     case 3:  // Bishop
+//                         totalScore += bishopEvalWhite[row][col];
+//                         break;
+//                     case 4:  // Rook
+//                         totalScore += rookEvalWhite[row][col];
+//                         break;
+//                     case 5:  // Queen
+//                         totalScore += evalQueen[row][col];
+//                         break;
+//                     case 6:  // King
+//                         totalScore += kingEvalWhite[row][col];
+//                         break;
+//                 }
+//             }
+//             if (opponentPiece != 0) {  // Opponent's pieces
+//                 switch (opponentPiece) {
+//                     case 1:  // Pawn
+//                         totalScore -= pawnEvalBlack[row][col];
+//                         break;
+//                     case 2:  // Knight
+//                         totalScore -= knightEval[row][col];
+//                         break;
+//                     case 3:  // Bishop
+//                         totalScore -= bishopEvalBlack[row][col];
+//                         break;
+//                     case 4:  // Rook
+//                         totalScore -= rookEvalBlack[row][col];
+//                         break;
+//                     case 5:  // Queen
+//                         totalScore -= evalQueen[row][col];
+//                         break;
+//                     case 6:  // King
+//                         totalScore -= kingEvalBlack[row][col];
+//                         break;
+//                 }
+//             }
+//         }
+//     }
+//     return round(totalScore);
+// }
