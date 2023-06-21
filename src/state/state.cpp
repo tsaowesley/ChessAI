@@ -11,9 +11,37 @@
  * 
  * @return int 
  */
+<<<<<<< HEAD
 int State::evaluate(){
   // [TODO] design your own evaluation function
   return 0;
+=======
+
+
+int State::evaluate(){ // White Value - Black Value
+  // [TODO] design your own evaluation function
+  auto whiteGrid = this->board.board[0];
+  auto blackGrid = this->board.board[1];
+  int Score = 0;
+
+  auto computeChessValue = [&](int chess, bool isWhite){
+    switch (chess){
+      case 1: return isWhite ? 2 : -2;
+      case 2: return isWhite ? 7 : -7;
+      case 3: return isWhite ? 6 : -6;
+      case 4: return isWhite ? 8 : -8;
+      case 5: return isWhite ? 15 : -15;
+      case 6: return isWhite ? 900 : -900;
+      default: return 0;
+    }
+  };
+
+  for(int row=0; row<BOARD_H; ++row)
+    for(int column=0; column<BOARD_W; ++column)
+      Score += computeChessValue(whiteGrid[row][column], true) + computeChessValue(blackGrid[row][column], false);
+
+  return Score ; // White Value - Black Value
+>>>>>>> 299c2d2 (submission)
 }
 
 
