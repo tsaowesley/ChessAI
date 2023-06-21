@@ -2,10 +2,10 @@
 #include <climits>
 #include <iostream>
 #include "../state/state.hpp"
-#include "./alphabeta.hpp"
+#include "./submission.hpp"
 
 
-Move Alphabeta::get_move(State *state, int depth){
+Move Submission::get_move(State *state, int depth){
   state->get_legal_actions();
   int bestScore;
 
@@ -29,7 +29,7 @@ Move Alphabeta::get_move(State *state, int depth){
 
   for (const auto& action : legalActions) {
       auto nextState = state->next_state(action);
-      int currentScore = Alphabeta::alphabeta(nextState, depth - 1, INT_MIN, INT_MAX, 1 - state->player);
+      int currentScore = Submission::submission(nextState, depth - 1, INT_MIN, INT_MAX, 1 - state->player);
       updateBestScore(currentScore, action);
   }
 
@@ -37,7 +37,7 @@ Move Alphabeta::get_move(State *state, int depth){
 }
 
 
-int Alphabeta::alphabeta(State* state, int depth, int alpha, int beta, int maximizingPlayer){
+int Submission::submission(State* state, int depth, int alpha, int beta, int maximizingPlayer){
 
   int currentPlayer = state->player;
   int evalScore;
@@ -51,7 +51,7 @@ int Alphabeta::alphabeta(State* state, int depth, int alpha, int beta, int maxim
   if (maximizingPlayer == 0) {
       for (auto currentMove : state->legal_actions) {
           auto futureState = state->next_state(currentMove);
-          int moveScore = alphabeta(futureState, depth - 1, alpha, beta, 1);
+          int moveScore = submission(futureState, depth - 1, alpha, beta, 1);
           alpha = std::max(alpha, moveScore);
           if(beta <= alpha)
               break;
@@ -60,7 +60,7 @@ int Alphabeta::alphabeta(State* state, int depth, int alpha, int beta, int maxim
   } else {
       for (auto currentMove : state->legal_actions) {
           auto futureState = state->next_state(currentMove);
-          int moveScore = alphabeta(futureState, depth - 1, alpha, beta, 0);
+          int moveScore = submission(futureState, depth - 1, alpha, beta, 0);
           beta = std::min(beta, moveScore);
           if(beta <= alpha)
               break;

@@ -1,56 +1,82 @@
-#include "./minimax.hpp"
-#include <climits>
 #include <cstdlib>
+#include <climits>
+#include <iostream>
 #include "../state/state.hpp"
+#include "./minimax.hpp"
 
-int Minimax::minimax(State* state, int depth, bool maximizingPlayer) {
-    if (depth == 0 || state->game_state != NONE) {
-        return state->evaluate();
-    }
 
-    State* next_state;
-    int evaluation;
+/**
+ * @brief Obtain a legal action based on the state and depth
+ *
+ * @param state Current state
+ * @param depth Depth for the Minimax search
+ * @return Move Best move found by Minimax algorithm
+ */
+Move Minimax::get_move(State *state, int depth){
+  state->get_legal_actions();
+  int bestScore;
 
-    if (maximizingPlayer) {
-        int highestEval = INT_MIN;
-        for (auto& move : state->legal_actions) {
-            next_state = state->next_state(move);
-            evaluation = minimax(next_state, depth - 1, false);
-            highestEval = (evaluation > highestEval) ? evaluation : highestEval;
-            delete next_state;
-        }
-        return highestEval;
-    } else {
-        int lowestEval = INT_MAX;
-        for (auto& move : state->legal_actions) {
-            next_state = state->next_state(move);
-            evaluation = minimax(next_state, depth - 1, true);
-            lowestEval = (evaluation < lowestEval) ? evaluation : lowestEval;
-            delete next_state;
-        }
-        return lowestEval;
-    }
+  if (state->player)
+      bestScore = INT_MAX;
+  else
+      bestScore = INT_MIN;
+
+  auto legalActions = state->legal_actions;
+  Move selectedMove = legalActions[0];
+
+  auto updateBestScore = [&](int currentScore, const Move& action) {
+      if (state->player && currentScore < bestScore) {
+          bestScore = currentScore;
+          selectedMove = action;
+      } else if (!state->player && currentScore > bestScore) {
+          bestScore = currentScore;
+          selectedMove = action;
+      }
+  };
+
+  for (const auto& action : legalActions) {
+      auto nextState = state->next_state(action);
+      int currentScore = Minimax::minimax(nextState, depth - 1, 1 - state->player);
+      updateBestScore(currentScore, action);
+  }
+
+  return selectedMove;
 }
 
-Move Minimax::get_move(State* state, int depth) {
-    if (!state->legal_actions.size())
-        state->get_legal_actions();
 
-    Move bestMove;
-    State* next_state;
-    int highestEval = INT_MIN;
-    int evaluation;
+int Minimax::minimax(State* state, int depth, int maximizingPlayer){
 
-    for (auto& move : state->legal_actions) {
-        next_state = state->next_state(move);
-        evaluation = minimax(next_state, depth - 1, true);
+  int currentPlayer = state->player;
+  int evalScore;
 
-        if (evaluation > highestEval) {
-            highestEval = evaluation;
-            bestMove = move;
-        }
+  if (depth == 0 || state->legal_actions.empty()) {
+      evalScore = state->evaluate();
+      return evalScore;
+  }
 
-        delete next_state;
-    }
-    return bestMove;
+  int topScore;
+  if (maximizingPlayer == 0) {
+      topScore = INT_MIN;
+      state->get_legal_actions();
+      if (!state->legal_actions.empty()) {
+          for (auto currentMove : state->legal_actions) {
+              auto futureState = state->next_state(currentMove);
+              int moveScore = minimax(futureState, depth - 1, 1);
+              topScore = std::max(topScore, moveScore);
+          }
+          return topScore;
+      }
+  } else {
+      topScore = INT_MAX;
+      state->get_legal_actions();
+      if (!state->legal_actions.empty()) {
+          for (auto currentMove : state->legal_actions) {
+              auto futureState = state->next_state(currentMove);
+              int moveScore = minimax(futureState, depth - 1, 0);
+              topScore = std::min(topScore, moveScore);
+          }
+          return topScore;
+      }
+  }
+
 }

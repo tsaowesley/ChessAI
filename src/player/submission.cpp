@@ -1,4 +1,4 @@
-#include "../policy/alphabeta.hpp"
+#include "../policy/submission.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -43,7 +43,7 @@ void write_valid_spot(std::ofstream& fout) {
     // Keep updating the output until getting killed.
     while (true) {
         // Choose a random spot.
-        auto move = Alphabeta::get_move(root, DEPTH);
+        auto move = Submission::get_move(root, DEPTH);
         fout << move.first.first << " " << move.first.second << " "
              << move.second.first << " " << move.second.second << std::endl;
 

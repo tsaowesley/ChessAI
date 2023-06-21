@@ -15,42 +15,31 @@
  *
  * @return int
  */
-std::map<int, int> valueMap = { //1=pawn, 2=rook, 3=knight, 4=bishop, 5=queen, 6=king
-    {1, 10},
-    {2, 50},
-    {3, 30},
-    {4, 30},
-    {5, 90},
-    {6, 900}
-};
 
-int getValue(int type) {
-    return valueMap[type];
-}
 
-int State::calculateValue(char board[BOARD_H][BOARD_W], bool isPlayer) {
-    int totalValue = 0;
-    int piece;
-    for(int i=0; i<BOARD_H; i+=1){
-        for(int j=0; j<BOARD_W; j+=1){
-            piece = board[i][j];
-            if (piece) {
-                totalValue += getValue(piece);
-                // Add extra logic here to calculate additional value based on the piece's position, type, and other factors
-            }
-        }
+int State::evaluate(){ // White Value - Black Value
+  // [TODO] design your own evaluation function
+  auto whiteGrid = this->board.board[0];
+  auto blackGrid = this->board.board[1];
+  int Score = 0;
+
+  auto computeChessValue = [&](int chess, bool isWhite){
+    switch (chess){
+      case 1: return isWhite ? 2 : -2;
+      case 2: return isWhite ? 7 : -7;
+      case 3: return isWhite ? 6 : -6;
+      case 4: return isWhite ? 8 : -8;
+      case 5: return isWhite ? 15 : -15;
+      case 6: return isWhite ? 900 : -900;
+      default: return 0;
     }
-    return totalValue;
-}
+  };
 
-int State::evaluate() {
-    auto self_board = this->board.board[this->player];
-    auto opponent_board = this->board.board[1 - this->player];
-    int my_value = calculateValue(self_board, true);
-    int opponent_value = calculateValue(opponent_board, false);
+  for(int row=0; row<BOARD_H; ++row)
+    for(int column=0; column<BOARD_W; ++column)
+      Score += computeChessValue(whiteGrid[row][column], true) + computeChessValue(blackGrid[row][column], false);
 
-
-    return my_value - opponent_value;
+  return Score ; // White Value - Black Value
 }
 
 
