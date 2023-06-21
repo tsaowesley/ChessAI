@@ -5,6 +5,13 @@
 #include "./submission.hpp"
 
 
+/**
+ * @brief Obtain a legal action based on the state and depth
+ *
+ * @param state Current state
+ * @param depth Depth for the Submission search
+ * @return Move Best move found by Submission algorithm
+ */
 Move Submission::get_move(State *state, int depth){
   state->get_legal_actions();
   int bestScore;
@@ -29,7 +36,7 @@ Move Submission::get_move(State *state, int depth){
 
   for (const auto& action : legalActions) {
       auto nextState = state->next_state(action);
-      int currentScore = Submission::submission(nextState, depth - 1, INT_MIN, INT_MAX, 1 - state->player);
+      int currentScore = Submission::minimax(nextState, depth - 1, 1 - state->player);
       updateBestScore(currentScore, action);
   }
 
@@ -37,7 +44,7 @@ Move Submission::get_move(State *state, int depth){
 }
 
 
-int Submission::submission(State* state, int depth, int alpha, int beta, int maximizingPlayer){
+int Submission::minimax(State* state, int depth, int maximizingPlayer){
 
   int currentPlayer = state->player;
   int evalScore;
@@ -47,24 +54,29 @@ int Submission::submission(State* state, int depth, int alpha, int beta, int max
       return evalScore;
   }
 
-  state->get_legal_actions();
+  int topScore;
   if (maximizingPlayer == 0) {
-      for (auto currentMove : state->legal_actions) {
-          auto futureState = state->next_state(currentMove);
-          int moveScore = submission(futureState, depth - 1, alpha, beta, 1);
-          alpha = std::max(alpha, moveScore);
-          if(beta <= alpha)
-              break;
+      topScore = INT_MIN;
+      state->get_legal_actions();
+      if (!state->legal_actions.empty()) {
+          for (auto currentMove : state->legal_actions) {
+              auto futureState = state->next_state(currentMove);
+              int moveScore = minimax(futureState, depth - 1, 1);
+              topScore = std::max(topScore, moveScore);
+          }
+          return topScore;
       }
-      return alpha;
   } else {
-      for (auto currentMove : state->legal_actions) {
-          auto futureState = state->next_state(currentMove);
-          int moveScore = submission(futureState, depth - 1, alpha, beta, 0);
-          beta = std::min(beta, moveScore);
-          if(beta <= alpha)
-              break;
+      topScore = INT_MAX;
+      state->get_legal_actions();
+      if (!state->legal_actions.empty()) {
+          for (auto currentMove : state->legal_actions) {
+              auto futureState = state->next_state(currentMove);
+              int moveScore = minimax(futureState, depth - 1, 0);
+              topScore = std::min(topScore, moveScore);
+          }
+          return topScore;
       }
-      return beta;
   }
+
 }
